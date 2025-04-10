@@ -1,7 +1,6 @@
 import streamlit as st
 
 def main():
-    # Page configuration for nicer display on Streamlit Cloud
     st.set_page_config(
         page_title="Espresso Earnings",
         page_icon=":coffee:",
