@@ -1,98 +1,96 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
 
 def main():
-    # Set the page configuration (this works on Streamlit Community Cloud as well as locally)
-    st.set_page_config(page_title="Dashboard App", layout="wide", initial_sidebar_state="expanded")
+    # Set the app's page configuration for a polished display on Streamlit Cloud.
+    st.set_page_config(
+        page_title="Coffee Rewards",
+        page_icon=":coffee:",
+        layout="centered",
+        initial_sidebar_state="expanded"
+    )
 
-    # Main title of the app
-    st.title("My Dashboard Application")
-
-    # Sidebar for navigation across pages
+    # ----------------------------------------------------------------------------
+    # SIDEBAR
+    # ----------------------------------------------------------------------------
+    st.sidebar.header("User Info")
+    # Persistent input for total steps (available on every page)
+    steps = st.sidebar.number_input(
+        "Enter your total steps for today:",
+        min_value=0,
+        value=0,
+        step=100,
+        help="Enter the number of steps you have walked today."
+    )
+    
     st.sidebar.header("Navigation")
-    page = st.sidebar.radio("Select a page", ["Home", "Data Viewer", "Visualizations", "About"])
+    # Navigation menu for switching between pages
+    page = st.sidebar.selectbox("Select Page", ["Home", "Rewards", "About"])
 
-    # --- PAGE: Home ---
+    # ----------------------------------------------------------------------------
+    # PAGE: Home
+    # ----------------------------------------------------------------------------
     if page == "Home":
-        st.header("Welcome to Your Dashboard")
-        st.markdown("""
-            This dashboard includes:
-            - **Interactive navigation:** Use the sidebar to switch between pages.
-            - **Data Upload and Viewing:** Upload a CSV file to view your data and summary.
-            - **Visualizations:** See sample charts and graphs, or replace with your own data.
-            - **About Section:** Information about the app.
-        """)
-        # Display an example image (replace the URL with your own if needed)
-        st.image("https://via.placeholder.com/800x400.png?text=Dashboard+Image+Placeholder", 
-                 caption="Dashboard Preview", use_column_width=True)
-
-    # --- PAGE: Data Viewer ---
-    elif page == "Data Viewer":
-        st.header("Data Upload and Viewer")
-        st.markdown("Upload a CSV file to explore your data.")
-    
-        # File uploader widget to let users upload their CSV files
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-        if uploaded_file is not None:
-            try:
-                df = pd.read_csv(uploaded_file)
-                st.subheader("Data Preview")
-                st.write(df.head())
-                st.subheader("Summary Statistics")
-                st.write(df.describe())
-            except Exception as e:
-                st.error(f"Error reading file: {e}")
+        st.title("Coffee Rewards")
+        st.markdown("Welcome to **Coffee Rewards**! Walk more today and unlock exclusive coffee discounts.")
+        if steps > 0:
+            st.subheader(f"Total Steps Walked Today: {steps:,}")
+            # Optionally, show a simple progress indicator towards a baseline daily goal (e.g., 10,000 steps)
+            daily_goal = 10000
+            progress = min(steps / daily_goal, 1.0)
+            st.progress(progress)
+            st.write(f"Progress toward a {daily_goal:,} steps goal: {int(progress*100)}%")
         else:
-            st.info("Awaiting CSV file upload.")
+            st.info("Please enter your steps in the sidebar.")
 
-    # --- PAGE: Visualizations ---
-    elif page == "Visualizations":
-        st.header("Visualizations")
-        st.markdown("Select the type of visualization you want to see.")
-    
-        # Choose visualization type from a dropdown
-        viz_option = st.selectbox("Visualization Type", ["Line Chart", "Bar Chart", "Scatter Plot"])
-    
-        # Generate dummy data for demonstration purposes
-        np.random.seed(42)
-        x = np.linspace(0, 10, 100)
-        y = np.sin(x) + np.random.normal(0, 0.15, 100)
-        data = pd.DataFrame({"x": x, "y": y})
-    
-        # Create two columns for displaying the chart and a data table side-by-side
-        col1, col2 = st.columns(2)
-    
-        with col1:
-            st.subheader(f"{viz_option}")
-            if viz_option == "Line Chart":
-                st.line_chart(data.set_index("x"))
-            elif viz_option == "Bar Chart":
-                st.bar_chart(data.set_index("x"))
-            elif viz_option == "Scatter Plot":
-                fig = px.scatter(data, x="x", y="y", title="Scatter Plot")
-                st.plotly_chart(fig)
-    
-        with col2:
-            st.subheader("Data Table")
-            st.write(data.head(10))
-            st.markdown("This dummy dataset is used to generate the chart.")
-
-    # --- PAGE: About ---
-    elif page == "About":
-        st.header("About This App")
-        st.markdown("""
-            **Dashboard Application**  
-            This is a sample dashboard created using Streamlit. It demonstrates:
-            - A multipage layout using sidebar navigation.
-            - CSV file upload and basic data exploration.
-            - Example visualizations using both native Streamlit charts and Plotly.
+    # ----------------------------------------------------------------------------
+    # PAGE: Rewards
+    # ----------------------------------------------------------------------------
+    elif page == "Rewards":
+        st.title("Your Coffee Rewards")
+        if steps > 0:
+            st.subheader(f"Steps Walked: {steps:,}")
+            # Define coffee shop rewards with the associated discount and required steps
+            rewards = [
+                {"name": "Helix", "discount": "15% off", "steps_needed": 8000},
+                {"name": "The Tram Cafe", "discount": "Free upsize", "steps_needed": 10000},
+                {"name": "Starbucks", "discount": "Buy 1 Get 1 free", "steps_needed": 15000}
+            ]
             
-            **Developed by:** Your Name  
-            **GitHub Repository:** [Your Repository Link](https://github.com/your-github-username/repository-name)
+            # Display each reward with progress information
+            for reward in rewards:
+                st.markdown(f"### {reward['name']}")
+                st.write(f"**Reward:** {reward['discount']}  •  **Steps Required:** {reward['steps_needed']:,}")
+                progress = steps / reward['steps_needed']
+                
+                if progress >= 1:
+                    st.write("🎉 **Reward Unlocked!**")
+                    st.progress(1.0)
+                else:
+                    st.write(f"Progress: {int(progress * 100)}%")
+                    st.progress(progress if progress <= 1.0 else 1.0)
+                    remaining = reward['steps_needed'] - steps
+                    st.write(f"Steps needed to unlock: {remaining:,}")
+                st.write("---")
+        else:
+            st.info("Please enter your steps in the sidebar to see your rewards.")
+
+    # ----------------------------------------------------------------------------
+    # PAGE: About
+    # ----------------------------------------------------------------------------
+    elif page == "About":
+        st.title("About Coffee Rewards")
+        st.markdown("""
+            **Coffee Rewards** is a consumer application designed to help you earn coffee discounts by walking more!
+            
+            **How It Works:**
+            - Enter your total steps for today in the sidebar.
+            - The app calculates your progress towards unlocking exclusive coffee discounts.
+            - When you reach the required number of steps for a reward, that discount becomes available.
+            
+            Stay active, enjoy your coffee, and get rewarded!
         """)
-        st.info("This app is meant for demonstration purposes. Customize it to suit your needs!")
 
 if __name__ == '__main__':
     main()
+
+
